@@ -61,7 +61,7 @@ public class SubscribersNotifier<T> {
     /**
      * Removes subscriber from notification list
      *
-     * @param callback
+     * @param callback callbact object for receiving notifications
      */
     public void unsubscribe(INotificationCallback<T> callback) {
         mSubscribers.remove(callback);
@@ -74,6 +74,7 @@ public class SubscribersNotifier<T> {
     /**
      * Sends notification to all subscribers
      *
+     * @param sender object wich sent notification
      * @param param notification data
      */
     public void sendNotification(Object sender, T param) {

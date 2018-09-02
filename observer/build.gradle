@@ -3,7 +3,7 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 ext {
-    bintrayRepo = 'java-observer'
+    bintrayRepo = 'neuro-sdk'
     bintrayName = 'java-observer'
 
     publishedGroupId = 'com.neuromd.javaobserver'
