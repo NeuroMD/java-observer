@@ -17,8 +17,9 @@
 package com.neuromd.javaobserver;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Create instance of this class to use notification mechanism for your subscribers
@@ -46,7 +47,8 @@ public class SubscribersNotifier<T> {
      * List of subscribers of your class
      * Enumerate it and call notification methods
      */
-    private List<INotificationCallback<T>> mSubscribers = Collections.synchronizedList(new ArrayList<INotificationCallback<T>>());
+    private final List<INotificationCallback<T>> mSubscribers = new ArrayList<>();
+    private final Lock mLock = new ReentrantLock();
 
     /**
      * Appends notifications subscriber
@@ -54,8 +56,14 @@ public class SubscribersNotifier<T> {
      * @param callback subscriber callback class
      */
     public void subscribe(INotificationCallback<T> callback) {
-        if (mSubscribers.contains(callback)) return;
-        mSubscribers.add(callback);
+        mLock.lock();
+        try {
+            if (!mSubscribers.contains(callback)) {
+                mSubscribers.add(callback);
+            }
+        } finally {
+            mLock.unlock();
+        }
     }
 
     /**
@@ -64,11 +72,21 @@ public class SubscribersNotifier<T> {
      * @param callback callbact object for receiving notifications
      */
     public void unsubscribe(INotificationCallback<T> callback) {
-        mSubscribers.remove(callback);
+        mLock.lock();
+        try {
+            mSubscribers.remove(callback);
+        } finally {
+            mLock.unlock();
+        }
     }
 
     public void unsubscribe() {
-        mSubscribers.clear();
+        mLock.lock();
+        try {
+            mSubscribers.clear();
+        } finally {
+            mLock.unlock();
+        }
     }
 
     /**
@@ -78,9 +96,14 @@ public class SubscribersNotifier<T> {
      * @param param notification data
      */
     public void sendNotification(Object sender, T param) {
-        for (INotificationCallback<T> subscriber : mSubscribers) {
-            if (subscriber == null) continue;
-            subscriber.onNotify(sender, param);
+        mLock.lock();
+        try {
+            for (INotificationCallback<T> subscriber : mSubscribers) {
+                if (subscriber == null) continue;
+                subscriber.onNotify(sender, param);
+            }
+        } finally {
+            mLock.unlock();
         }
     }
 }
