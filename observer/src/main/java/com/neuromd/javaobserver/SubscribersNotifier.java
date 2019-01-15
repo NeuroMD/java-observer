@@ -18,7 +18,6 @@ package com.neuromd.javaobserver;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -48,7 +47,7 @@ public class SubscribersNotifier<T> {
      * Enumerate it and call notification methods
      */
     private final List<INotificationCallback<T>> mSubscribers = new ArrayList<>();
-    private final Lock mLock = new ReentrantLock();
+    private final ReentrantLock mLock = new ReentrantLock();
 
     /**
      * Appends notifications subscriber
@@ -56,6 +55,9 @@ public class SubscribersNotifier<T> {
      * @param callback subscriber callback class
      */
     public void subscribe(INotificationCallback<T> callback) {
+        if (mLock.isHeldByCurrentThread()){
+            throw new NotificationDeadlockException("Attempt to modify notification list from notification thread");
+        }
         mLock.lock();
         try {
             if (!mSubscribers.contains(callback)) {
@@ -72,6 +74,9 @@ public class SubscribersNotifier<T> {
      * @param callback callbact object for receiving notifications
      */
     public void unsubscribe(INotificationCallback<T> callback) {
+        if (mLock.isHeldByCurrentThread()){
+            throw new NotificationDeadlockException("Attempt to modify notification list from notification thread");
+        }
         mLock.lock();
         try {
             mSubscribers.remove(callback);
@@ -81,6 +86,9 @@ public class SubscribersNotifier<T> {
     }
 
     public void unsubscribe() {
+        if (mLock.isHeldByCurrentThread()){
+            throw new NotificationDeadlockException("Attempt to modify notification list from notification thread");
+        }
         mLock.lock();
         try {
             mSubscribers.clear();
@@ -105,5 +113,24 @@ public class SubscribersNotifier<T> {
         } finally {
             mLock.unlock();
         }
+    }
+
+    /**
+     * Sends notification to all subscribers in new thread
+     *
+     * @param sender object wich sent notification
+     * @param param notification data
+     */
+    public void sendNotificationAsync(final Object sender, final T param) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    sendNotification(sender, param);
+                } catch (Throwable thr) {
+                    //do nothing
+                }
+            }
+        }).start();
     }
 }

@@ -15,7 +15,7 @@ ext {
     siteUrl = 'https://wiki.neuromd.com/'
     gitUrl = 'https://github.com/NeuroMD/java-observer.git'
 
-    libraryVersion = 1.1
+    libraryVersion = 1.2
 
     developerId = 'neuromdltd'
     developerName = 'NeuroMD'
